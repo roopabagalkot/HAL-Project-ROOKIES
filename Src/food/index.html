@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        /* Simple styling */
+        body { font-family: Arial, sans-serif; }
+        #chat-box { width: 300px; height: 400px; border: 1px solid #ccc; padding: 10px; overflow-y: scroll; }
+        .user-msg { color: blue; }
+        .bot-msg { color: green; }
+        #message { width: 100%; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<h1>Chat with our Bot</h1>
+
+<div id="chat-box"></div>
+
+<input type="text" id="message" placeholder="Type a message" />
+<button onclick="sendMessage()">Send</button>
+
+<script>
+    function sendMessage() {
+        var message = document.getElementById("message").value;
+        if (message.trim() != "") {
+            var chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += `<p class="user-msg">${message}</p>`;
+
+            fetch('/get_response', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'message': message
+                }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                chatBox.innerHTML += `<p class="bot-msg">${data.response}</p>`;
+                document.getElementById("message").value = '';
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+    }
+</script>
+
+</body>
+</html>

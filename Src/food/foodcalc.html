@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Composition Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            text-align: left; /* Align content to the left */
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            padding-left: 20px; /* Add space from the left edge */
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            grid-gap: 20px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .details {
+            padding: 20px;
+            height: 100%;
+            font-size: 0.9rem; /* Reduced font size for the entire section */
+        }
+
+        .details h2 {
+            font-size: 1.5rem; /* Adjusted size for the food name */
+            color: #4CAF50;
+        }
+
+        .details .food-item,
+        .details .nutrition {
+            font-size: 0.9rem; /* Reduced size for items and labels */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f9f9f9;
+            padding: 10px; /* Reduced padding */
+            border-radius: 5px;
+            margin-bottom: 10px; /* Reduced margin between items */
+        }
+
+        .details label,
+        .details input {
+            font-size: 0.8rem; /* Adjusted size for labels and input fields */
+            margin: 8px 0; /* Reduced spacing */
+        }
+
+        .details input[type="number"] {
+            padding: 8px; /* Reduced padding */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Aligns the chart to the top */
+            height: 100%;
+            margin-top: 70px; /* Adds space above the chart */
+        }
+
+        .chart-container canvas {
+            width: 90%; /* Reduces the width of the chart */
+            height: auto;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+
+
+<body>
+    <header>
+        <h1>Food Composition Calculator</h1>
+    </header>
+    <div class="container">
+        <!-- Left Section -->
+        <div class="details">
+            <div class="food-item">
+                <span>Detected Food Item:</span>
+                <span id="food-item">None</span>
+            </div>
+            <h2 id="food-name">Food Name</h2>
+            <p id="food-description">Description of the detected food item.</p>
+            <div class="nutrition">
+                <span class="nutrition-label">Carbohydrates (g):</span>
+                <span id="carbs">0g</span>
+            </div>
+            <div class="nutrition">
+                <span class="nutrition-label">Proteins (g):</span>
+                <span id="proteins">0g</span>
+            </div>
+            <div class="nutrition">
+                <span class="nutrition-label">Fats (g):</span>
+                <span id="fats">0g</span>
+            </div>
+            <div class="nutrition">
+                <span class="nutrition-label">Lipids (g):</span>
+                <span id="lipids">0g</span>
+            </div>
+            <div class="nutrition">
+                <span class="nutrition-label">Cholesterol (mg):</span>
+                <span id="cholesterol">0mg</span>
+            </div>
+            <div class="nutrition">
+                <span class="nutrition-label">Calories:</span>
+                <span id="calories">0</span>
+            </div>
+            <label for="weight">Weight (g):</label>
+            <input type="number" id="weight" oninput="updateNutrition()" placeholder="Enter weight in grams">
+        </div>
+
+        <!-- Right Section -->
+        <div class="chart-container">
+            <canvas id="nutrition-chart"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const foodData = {
+  "apple": { name: "Apple", description: "A sweet and crunchy fruit.", carbs: 14, proteins: 0.3, fats: 0.2, lipids: 0.1, cholesterol: 0, calories: 52 },
+  "banana": { name: "Banana", description: "A soft and sweet fruit rich in potassium.", carbs: 23, proteins: 1.1, fats: 0.3, lipids: 0.2, cholesterol: 0, calories: 96 },
+  "chapathi": { name: "Chapathi", description: "A soft flatbread made from wheat flour.", carbs: 20, proteins: 4.2, fats: 1.5, lipids: 1.2, cholesterol: 0, calories: 104 },
+  "chicken gravy": { name: "Chicken Gravy", description: "A savory chicken dish with a rich gravy.", carbs: 3, proteins: 12, fats: 10, lipids: 7, cholesterol: 50, calories: 150 },
+  "fries": { name: "Fries", description: "Crispy fried potato strips.", carbs: 35, proteins: 3.5, fats: 17, lipids: 13, cholesterol: 0, calories: 312 },
+  "idli": { name: "Idli", description: "A steamed rice cake, popular in South India.", carbs: 12, proteins: 2.5, fats: 0.3, lipids: 0.1, cholesterol: 0, calories: 39 },
+  "pizza": { name: "Pizza", description: "A savory dish with various toppings on a dough base.", carbs: 26, proteins: 11, fats: 10, lipids: 5, cholesterol: 20, calories: 285 },
+  "rice": { name: "Rice", description: "A staple grain commonly served with meals.", carbs: 28, proteins: 2.7, fats: 0.3, lipids: 0.2, cholesterol: 0, calories: 130 },
+  "soda": { name: "Soda", description: "A sweetened carbonated beverage.", carbs: 10, proteins: 0, fats: 0, lipids: 0, cholesterol: 0, calories: 40 },
+  "tomato": { name: "Tomato", description: "A juicy fruit often used in salads and sauces.", carbs: 3.9, proteins: 0.9, fats: 0.2, lipids: 0.1, cholesterol: 0, calories: 18 },
+  "vada": { name: "Vada", description: "A fried savory doughnut-shaped snack.", carbs: 18, proteins: 5, fats: 12, lipids: 9, cholesterol: 5, calories: 230 },
+  "burger": { name: "Burger", description: "A sandwich consisting of a beef patty, lettuce, and other toppings.", carbs: 30, proteins: 12, fats: 10, lipids: 8, cholesterol: 40, calories: 295 }
+};
+
+
+        const ctx = document.getElementById("nutrition-chart").getContext("2d");
+        const chart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ["Carbohydrates (g)", "Proteins (g)", "Fats (g)", "Lipids (g)", "Cholesterol (mg)", "Calories"],
+                datasets: [{
+                    label: "Nutritional Composition",
+                    data: [0, 0, 0, 0, 0, 0],
+                    backgroundColor: [
+                        "rgba(255, 99, 132, 0.2)",
+                        "rgba(75, 192, 192, 0.2)",
+                        "rgba(255, 206, 86, 0.2)",
+                        "rgba(54, 162, 235, 0.2)",
+                        "rgba(153, 102, 255, 0.2)",
+                        "rgba(255, 159, 64, 0.2)"
+                    ],
+                    borderColor: [
+                        "rgba(255, 99, 132, 1)",
+                        "rgba(75, 192, 192, 1)",
+                        "rgba(255, 206, 86, 1)",
+                        "rgba(54, 162, 235, 1)",
+                        "rgba(153, 102, 255, 1)",
+                        "rgba(255, 159, 64, 1)"
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        function updateNutrition() {
+            const foodItem = document.getElementById("food-item").textContent.trim().toLowerCase();
+            const selectedFoodData = foodData[foodItem];
+            const weight = parseFloat(document.getElementById("weight").value);
+
+            if (!selectedFoodData || isNaN(weight)) {
+                return;
+            }
+
+            const carbs = (selectedFoodData.carbs * weight) / 100;
+            const proteins = (selectedFoodData.proteins * weight) / 100;
+            const fats = (selectedFoodData.fats * weight) / 100;
+            const lipids = (selectedFoodData.lipids * weight) / 100;
+            const cholesterol = (selectedFoodData.cholesterol * weight) / 100;
+            const calories = (selectedFoodData.calories * weight) / 100;
+
+            document.getElementById("food-name").textContent = selectedFoodData.name;
+            document.getElementById("food-description").textContent = selectedFoodData.description;
+            document.getElementById("carbs").textContent = carbs.toFixed(2) + 'g';
+            document.getElementById("proteins").textContent = proteins.toFixed(2) + 'g';
+            document.getElementById("fats").textContent = fats.toFixed(2) + 'g';
+            document.getElementById("lipids").textContent = lipids.toFixed(2) + 'g';
+            document.getElementById("cholesterol").textContent = cholesterol.toFixed(2);
+            document.getElementById("calories").textContent = calories.toFixed(2);
+
+            chart.data.datasets[0].data = [carbs, proteins, fats, lipids, cholesterol, calories];
+            chart.update();
+        }
+
+        function fetchDetectedFood() {
+            fetch('/get_object')
+                .then(response => response.json())
+                .then(data => {
+                    const foodItem = data.object_name;
+                    if (foodItem !== document.getElementById("food-item").textContent.trim()) {
+                        document.getElementById("food-item").textContent = foodItem;
+                        updateNutrition();
+                    }
+                })
+                .catch(error => console.error('Error fetching detected food:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            setInterval(fetchDetectedFood, 100); // Check for detected food every 0.1 seconds
+
+            document.getElementById("weight").addEventListener("input", updateNutrition);
+        });
+    </script>
+</body>
+
+</html>
